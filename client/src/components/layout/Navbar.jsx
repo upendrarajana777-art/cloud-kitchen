@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Menu, X, ChefHat, PhoneCall } from 'lucide-react';
+import { ShoppingBag, Menu, X, ChefHat, PhoneCall, Shield } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import Button from '../ui/Button';
 import StatusBadge from '../ui/StatusBadge';
@@ -79,6 +79,15 @@ const Navbar = () => {
                                 )}
                             </Button>
                         </Link>
+                        <Link to="/admin/login">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-14 w-14 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 hover:from-orange-500 hover:to-orange-600 shadow-lg hover:shadow-orange-500/30 transition-all duration-300 group border-0"
+                            >
+                                <Shield size={20} className="text-white group-hover:scale-110 transition-transform" />
+                            </Button>
+                        </Link>
                         <Link to="/support">
                             <Button variant="secondary" size="md" className="hidden xl:flex">
                                 <PhoneCall size={18} className="mr-2" /> Support
@@ -116,6 +125,11 @@ const Navbar = () => {
                         <Link to="/" onClick={() => setIsOpen(false)} className="text-2xl font-black text-slate-900">The Menu</Link>
                         <Link to="/orders" onClick={() => setIsOpen(false)} className="text-2xl font-black text-slate-900">Track Order</Link>
                         <div className="h-px bg-slate-100 w-full" />
+                        <Link to="/admin/login" onClick={() => setIsOpen(false)}>
+                            <Button variant="ghost" className="w-full bg-gradient-to-r from-slate-900 to-slate-700 text-white hover:from-orange-500 hover:to-orange-600 shadow-lg">
+                                <Shield size={20} className="mr-2" /> Admin Portal
+                            </Button>
+                        </Link>
                         <Button variant="primary" size="lg" className="w-full">
                             Call Kitchen
                         </Button>
