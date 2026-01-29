@@ -1,0 +1,17 @@
+{
+  "name": "cloud-kitchen",
+  "version": "1.0.0",
+  "description": "Cloud Kitchen - MongoDB Atlas + Firebase Auth",
+  "scripts": {
+    "client": "cd client && npm run dev",
+    "server": "cd server && node server.js",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "install:all": "npm --prefix client install && npm --prefix server install"
+  },
+  "keywords": ["cloud-kitchen", "food-delivery", "mongodb", "firebase"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
