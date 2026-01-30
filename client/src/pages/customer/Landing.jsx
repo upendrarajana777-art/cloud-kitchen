@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Sparkles, Utensils, Star, Flame, ArrowDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Navbar from '../../components/layout/Navbar';
 import FoodCard from '../../components/food/FoodCard';
 import CartBar from '../../components/cart/CartBar';
 import Button from '../../components/ui/Button';
@@ -77,8 +76,6 @@ const Landing = () => {
 
     return (
         <div className="min-h-screen">
-            <Navbar />
-
             {/* Hero Section */}
             <header className="relative pt-44 pb-24 overflow-hidden">
                 <div className="container mx-auto px-6 md:px-12 relative z-10">

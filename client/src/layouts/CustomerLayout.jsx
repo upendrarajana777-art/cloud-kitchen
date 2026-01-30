@@ -5,6 +5,7 @@ import Navbar from '../components/layout/Navbar';
 const CustomerLayout = () => {
     return (
         <div className="min-h-screen bg-[#FAFAFA] overflow-x-hidden">
+            <Navbar />
             <main>
                 <Outlet />
             </main>
