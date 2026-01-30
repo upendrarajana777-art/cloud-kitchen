@@ -10,15 +10,37 @@ import Cart from './pages/customer/Cart';
 import OrderTracking from './pages/customer/Orders';
 import Support from './pages/customer/Support';
 import AdminLogin from './pages/admin/Login';
+import Settings from './pages/admin/Settings';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
-import { connectSocket, disconnectSocket } from './services/socket';
+import socket, { connectSocket, disconnectSocket } from './services/socket';
 
 const App = () => {
   React.useEffect(() => {
-    // Connect as GUEST by default since we removed auth
+    // Connect as GUEST by default
     connectSocket('GUEST');
-    return () => disconnectSocket();
+
+    // Heartbeat mechanism for Active Customer tracking
+    const heartbeatInterval = setInterval(() => {
+      if (socket.connected) {
+        socket.emit('user-activity');
+      }
+    }, 30000); // 30 seconds
+
+    // Track activity on visibility change (user returns to tab)
+    const handleVisibilityChange = () => {
+      if (!document.hidden && socket.connected) {
+        socket.emit('user-activity');
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(heartbeatInterval);
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      disconnectSocket();
+    };
   }, []);
 
   return (
@@ -28,7 +50,8 @@ const App = () => {
         <Route path="/" element={<CustomerLayout />}>
           <Route index element={<Landing />} />
           <Route path="cart" element={<Cart />} />
-          <Route path="orders" element={<OrderTracking />} />
+          <Route path="my-orders" element={<OrderTracking />} />
+          <Route path="orders" element={<Navigate to="/my-orders" replace />} />
           <Route path="support" element={<Support />} />
           {/* Redirect /menu to home as we have a unified fast ordering landing */}
           <Route path="menu" element={<Navigate to="/" replace />} />
@@ -41,6 +64,7 @@ const App = () => {
             <Route index element={<Dashboard />} />
             <Route path="orders" element={<Orders />} />
             <Route path="food" element={<FoodManagement />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
         </Route>
 

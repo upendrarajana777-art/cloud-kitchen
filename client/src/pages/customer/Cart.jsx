@@ -7,6 +7,7 @@ import Input from '../../components/ui/Input';
 import Navbar from '../../components/layout/Navbar';
 import LocationPicker from '../../components/common/LocationPicker';
 import { createOrder } from '../../lib/db';
+import { getGuestId } from '../../lib/guest';
 import { cn } from '../../lib/utils';
 
 const Cart = () => {
@@ -36,8 +37,9 @@ const Cart = () => {
 
         setLoading(true);
         try {
+            const guestId = getGuestId();
             const orderId = await createOrder(
-                'GUEST',
+                guestId,
                 cartItems,
                 cartTotal, // Total only, no extra fees
                 {
@@ -49,7 +51,7 @@ const Cart = () => {
                 }
             );
             clearCart();
-            navigate(`/orders?id=${orderId}`);
+            navigate(`/my-orders?id=${orderId}`);
         } catch (error) {
             console.error("Order failed", error);
             alert("Order failed. Please try again.");

@@ -112,6 +112,60 @@
   }
 }
 
+@keyframes pulse-subtle {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 10px 40px -15px rgba(249, 115, 22, 0.1);
+  }
+
+  50% {
+    transform: scale(1.01);
+    box-shadow: 0 20px 60px -15px rgba(249, 115, 22, 0.25);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 10px 40px -15px rgba(249, 115, 22, 0.1);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+.order-glow {
+  position: relative;
+}
+
+.order-glow::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #F97316, #EF4444, #F97316);
+  border-radius: 42px;
+  z-index: -1;
+  filter: blur(10px);
+  opacity: 0.3;
+  animation: rotate-glow 5s linear infinite;
+}
+
+@keyframes rotate-glow {
+  0% {
+    filter: blur(10px);
+    opacity: 0.3;
+  }
+
+  50% {
+    filter: blur(15px);
+    opacity: 0.5;
+  }
+
+  100% {
+    filter: blur(10px);
+    opacity: 0.3;
+  }
+}
+
 /* Fluid Typography */
 .text-hero {
   @apply text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1];

@@ -1,12 +1,21 @@
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, UtensilsCrossed, ClipboardList, LogOut, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, UtensilsCrossed, ClipboardList, LogOut, ArrowLeft, Settings as SettingsIcon } from 'lucide-react';
 import { cn } from '../lib/utils';
 import Button from '../components/ui/Button';
+import NotificationManager from '../components/admin/NotificationManager';
+
+import { connectSocket } from '../services/socket';
 
 const AdminLayout = () => {
     const location = useLocation();
     const navigate = useNavigate();
+
+    React.useEffect(() => {
+        // Join admin room for live metrics and alerts
+        console.log('🛡️ Admin Layout: Joining ADMIN room');
+        connectSocket('ADMIN');
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('adminToken');
@@ -17,10 +26,12 @@ const AdminLayout = () => {
         { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
         { name: 'Orders', path: '/admin/orders', icon: ClipboardList },
         { name: 'Food Items', path: '/admin/food', icon: UtensilsCrossed },
+        { name: 'Settings', path: '/admin/settings', icon: SettingsIcon },
     ];
 
     return (
         <div className="flex min-h-screen bg-gray-50 font-sans">
+            <NotificationManager />
             {/* Sidebar */}
             <aside className="fixed left-0 top-0 bottom-0 w-72 bg-white border-r border-gray-100 z-50 hidden md:flex flex-col shadow-2xl shadow-gray-200/50">
                 <div className="p-8">

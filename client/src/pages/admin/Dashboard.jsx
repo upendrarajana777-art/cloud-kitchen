@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, ShoppingBag, DollarSign, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { TrendingUp, ShoppingBag, DollarSign, Clock, CheckCircle, XCircle, Users } from 'lucide-react';
 import { subscribeToOrders, getFoodItems, getKitchenStatus, updateKitchenStatus } from '../../lib/db';
 import socket from '../../services/socket';
 import { Line } from 'react-chartjs-2';
@@ -44,6 +44,7 @@ const Dashboard = () => {
     const [foodItems, setFoodItems] = useState([]);
     const [kitchenOpen, setKitchenOpen] = useState(true);
     const [loading, setLoading] = useState(true);
+    const [liveMetrics, setLiveMetrics] = useState({ activeCustomers: 0, totalVisitorsToday: 0 });
 
     useEffect(() => {
         // Basic polling subscription for initial load and fallback
@@ -58,18 +59,21 @@ const Dashboard = () => {
         // Live Socket.io updates
         socket.on('new-order', (newOrder) => {
             setOrders(prev => [newOrder, ...prev]);
-            // Play sound notification
-            try { new Audio('/notification.mp3').play(); } catch (e) { }
         });
 
         socket.on('admin-order-update', (updatedOrder) => {
             setOrders(prev => prev.map(o => o._id === updatedOrder._id ? updatedOrder : o));
         });
 
+        socket.on('live-metrics', (metrics) => {
+            setLiveMetrics(metrics);
+        });
+
         return () => {
             unsubscribe();
             socket.off('new-order');
             socket.off('admin-order-update');
+            socket.off('live-metrics');
         };
     }, []);
 
@@ -173,10 +177,46 @@ const Dashboard = () => {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard title="Total Revenue" value={`₹${totalRevenue.toFixed(2)}`} icon={DollarSign} trend="+18.4%" color="bg-orange-500" />
-                <StatCard title="Live Orders" value={activeOrders.length} icon={ShoppingBag} color="bg-blue-500" />
-                <StatCard title="Orders Today" value={orders.length} icon={Clock} trend={`+${orders.length}`} color="bg-purple-500" />
-                <StatCard title="Active Menu" value={foodItems.length} icon={TrendingUp} color="bg-emerald-500" />
+                {/* Active Customers Card with Pulsing Effect */}
+                <div className="bg-white p-6 rounded-[32px] shadow-sm border border-orange-100/50 hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4">
+                        <div className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 bg-green-500 rounded-full animate-ping" />
+                            <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Live</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-orange-500 shadow-lg shadow-orange-200 text-white">
+                            <Users size={24} />
+                        </div>
+                    </div>
+                    <p className="text-sm font-medium text-gray-400 mb-1">Active Customers</p>
+                    <h3 className="text-3xl font-black text-gray-900 animate-in fade-in zoom-in duration-500" key={liveMetrics.activeCustomers}>
+                        {liveMetrics.activeCustomers}
+                    </h3>
+                </div>
+
+                <StatCard
+                    title="Today's Revenue"
+                    value={`₹${totalRevenue.toFixed(0)}`}
+                    icon={DollarSign}
+                    trend={orders.length > 0 ? "+Active" : "Stable"}
+                    color="bg-emerald-500"
+                />
+
+                <StatCard
+                    title="Daily Visitors"
+                    value={liveMetrics.totalVisitorsToday}
+                    icon={TrendingUp}
+                    color="bg-blue-500"
+                />
+
+                <StatCard
+                    title="Pending Orders"
+                    value={activeOrders.length}
+                    icon={ShoppingBag}
+                    color="bg-purple-500"
+                />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

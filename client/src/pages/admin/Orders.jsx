@@ -5,8 +5,10 @@ import { Clock, CheckCircle2, Flame, Utensils, XCircle, ArrowRight, PackageCheck
 import Button from '../../components/ui/Button';
 import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal';
 import { cn } from '../../lib/utils';
+import { useAlerts } from '../../context/AlertContext';
 
 const Orders = () => {
+    const { newOrders, stopSound, markAsSeen } = useAlerts();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
@@ -21,7 +23,6 @@ const Orders = () => {
         // Real-time socket listener
         socket.on('new-order', (newOrder) => {
             setOrders(prev => [newOrder, ...prev]);
-            // Flash the page or play sound? 
         });
 
         socket.on('admin-order-update', (updatedOrder) => {
@@ -45,6 +46,10 @@ const Orders = () => {
     const handleStatusUpdate = async (orderId, newStatus) => {
         try {
             await updateOrderStatus(orderId, newStatus);
+            // If it was a new order, mark it as seen
+            if (newOrders.includes(orderId)) {
+                markAsSeen(orderId);
+            }
         } catch (error) {
             console.error("Failed to update status", error);
         }
@@ -72,6 +77,7 @@ const Orders = () => {
             case 'accepted': return { color: 'text-blue-600 bg-blue-100', icon: CheckCircle2, label: 'Accepted' };
             case 'preparing': return { color: 'text-purple-600 bg-purple-100', icon: Flame, label: 'Cooking' };
             case 'ready': return { color: 'text-yellow-600 bg-yellow-100', icon: Utensils, label: 'Ready' };
+            case 'out_for_delivery': return { color: 'text-blue-600 bg-blue-100', icon: MapPin, label: 'Out for Delivery' };
             case 'completed': return { color: 'text-green-600 bg-green-100', icon: PackageCheck, label: 'Done' };
             case 'cancelled': return { color: 'text-red-600 bg-red-100', icon: XCircle, label: 'Rejected' };
             default: return { color: 'text-gray-600 bg-gray-100', icon: Clock, label: 'Unknown' };
@@ -113,18 +119,38 @@ const Orders = () => {
                 ) : filteredOrders.map(order => {
                     const config = getStatusConfig(order.status);
                     const Icon = config.icon;
+                    const isNew = newOrders.includes(order._id);
 
                     return (
-                        <div key={order._id} className="group bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 flex flex-col lg:flex-row items-center justify-between gap-8 hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500">
+                        <div
+                            key={order._id}
+                            className={cn(
+                                "group bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 flex flex-col lg:flex-row items-center justify-between gap-8 transition-all duration-500",
+                                isNew
+                                    ? "ring-4 ring-orange-500/20 border-orange-200 shadow-[0_20px_60px_-15px_rgba(249,115,22,0.15)] animate-pulse-subtle bg-orange-50/10"
+                                    : "hover:shadow-2xl hover:shadow-gray-200/50"
+                            )}
+                        >
                             <div className="flex items-center gap-6 w-full lg:w-auto">
-                                <div className={cn("h-20 w-20 rounded-3xl flex items-center justify-center shrink-0 shadow-lg", config.color)}>
+                                <div className={cn(
+                                    "h-20 w-20 rounded-3xl flex items-center justify-center shrink-0 shadow-lg relative",
+                                    config.color,
+                                    isNew && "animate-bounce"
+                                )}>
                                     <Icon size={32} />
+                                    {isNew && (
+                                        <span className="absolute -top-2 -right-2 h-6 w-6 bg-red-500 rounded-full border-4 border-white animate-ping" />
+                                    )}
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-4 mb-2">
                                         <h3 className="font-black text-gray-900 text-2xl tracking-tight uppercase">#{order._id.slice(-6)}</h3>
-                                        <span className={cn("text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-tighter", config.color)}>
-                                            {config.label}
+                                        <span className={cn(
+                                            "text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-tighter",
+                                            config.color,
+                                            isNew && "ring-2 ring-orange-300 animate-pulse"
+                                        )}>
+                                            {isNew ? 'New Order' : config.label}
                                         </span>
                                     </div>
                                     <div className="flex flex-wrap gap-2 mb-2">
@@ -196,10 +222,18 @@ const Orders = () => {
                                 )}
                                 {order.status === 'ready' && (
                                     <button
+                                        onClick={() => handleStatusUpdate(order._id, 'out_for_delivery')}
+                                        className="w-full lg:w-auto px-8 py-4 rounded-2xl text-sm font-black text-white bg-blue-500 hover:bg-blue-600 shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        Dispatch for Delivery <ArrowRight size={18} />
+                                    </button>
+                                )}
+                                {order.status === 'out_for_delivery' && (
+                                    <button
                                         onClick={() => handleStatusUpdate(order._id, 'completed')}
                                         className="w-full lg:w-auto px-8 py-4 rounded-2xl text-sm font-black text-white bg-green-500 hover:bg-green-600 shadow-xl shadow-green-500/20 transition-all flex items-center justify-center gap-2"
                                     >
-                                        Dispatch Now <ArrowRight size={18} />
+                                        Mark as Delivered <CheckCircle2 size={18} />
                                     </button>
                                 )}
                                 {order.status === 'completed' && (

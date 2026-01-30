@@ -79,7 +79,6 @@ export const createOrder = async (userId, items, total, address) => {
             userId, // GUEST
             items,
             total,
-            total,
             address,
             location: address.location // Passing location separately or within address if preferred, but schema has it at root. Let's assume we pass it at root in request body.
         });

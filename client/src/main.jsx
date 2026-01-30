@@ -4,11 +4,14 @@ import App from './App'
 import './index.css'
 
 import { CartProvider } from './context/CartContext'
+import { AlertProvider } from './context/AlertContext'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <CartProvider>
-      <App />
+      <AlertProvider>
+        <App />
+      </AlertProvider>
     </CartProvider>
   </React.StrictMode>,
 )

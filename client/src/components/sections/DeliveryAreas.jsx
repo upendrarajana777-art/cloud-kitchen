@@ -130,11 +130,11 @@ const DeliveryAreas = () => {
                                             <Marker
                                                 key={area.id}
                                                 position={{ lat: area.lat, lng: area.lng }}
-                                                animation={window.google && window.google.maps.Animation.DROP}
+                                                animation={typeof window !== 'undefined' && window.google ? window.google.maps.Animation.DROP : undefined}
                                                 icon={hoveredArea?.id === area.id ? undefined : {
-                                                    path: window.google && window.google.maps.SymbolPath.CIRCLE,
+                                                    path: (typeof window !== 'undefined' && window.google) ? window.google.maps.SymbolPath.CIRCLE : 0,
                                                     scale: 8,
-                                                    fillColor: "#F97316", // Orange 500
+                                                    fillColor: "#F97316",
                                                     fillOpacity: 1,
                                                     strokeWeight: 2,
                                                     strokeColor: "#ffffff",

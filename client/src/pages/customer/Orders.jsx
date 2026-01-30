@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Package, Clock, CheckCircle2, ShoppingBag, Loader2, ChefHat, MapPin, Phone, ArrowLeft, ArrowRight, Star, ExternalLink, Flame, Trash2 } from 'lucide-react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { getOrders, getUserOrders, deleteOrder } from '../../lib/db';
+import { getGuestId } from '../../lib/guest';
 import Button from '../../components/ui/Button';
 import Navbar from '../../components/layout/Navbar';
 import socket from '../../services/socket';
@@ -17,8 +18,9 @@ const OrderTracking = () => {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                // Fetch orders for 'GUEST'
-                const data = await getUserOrders('GUEST');
+                // Fetch orders for unique guest
+                const guestId = getGuestId();
+                const data = await getUserOrders(guestId);
                 setOrders(data);
             } catch (error) {
                 console.error("Failed to fetch orders", error);
@@ -45,7 +47,7 @@ const OrderTracking = () => {
                 await deleteOrder(order._id);
                 setOrders(prev => prev.filter(o => o._id !== order._id));
                 if (order._id === trackedOrder?._id) {
-                    navigate('/orders'); // Redirect if deleting currently viewed order
+                    navigate('/my-orders'); // Redirect if deleting currently viewed order
                 }
             } catch (error) {
                 console.error("Failed to cancel order", error);
@@ -58,9 +60,11 @@ const OrderTracking = () => {
         switch (status) {
             case 'pending': return { icon: Clock, color: 'bg-orange-500', label: 'Order Confirmed', description: 'Our chef is viewing your order', progress: 15 };
             case 'accepted': return { icon: ChefHat, color: 'bg-indigo-500', label: 'Accepted', description: 'Your order is being queued', progress: 30 };
-            case 'preparing': return { icon: Flame, color: 'bg-emerald-500', label: 'In the Kitchen', description: 'Sizzling flavors in progress', progress: 50 };
-            case 'ready': return { icon: Package, color: 'bg-blue-500', label: 'Ready for Home', description: 'Fresh and packed for you', progress: 75 };
-            case 'completed': return { icon: CheckCircle2, color: 'bg-slate-900', label: 'Delivered', description: 'Bon appétit! See you soon', progress: 100 };
+            case 'preparing': return { icon: Flame, color: 'bg-yellow-500', label: 'In the Kitchen', description: 'Sizzling flavors in progress', progress: 50 };
+            case 'ready': return { icon: Package, color: 'bg-indigo-400', label: 'Ready for Home', description: 'Fresh and packed for you', progress: 70 };
+            case 'out_for_delivery': return { icon: MapPin, color: 'bg-blue-600', label: 'Out for Delivery', description: 'Our rider is on the way!', progress: 85 };
+            case 'completed': return { icon: CheckCircle2, color: 'bg-emerald-500', label: 'Delivered', description: 'Bon appétit! See you soon', progress: 100 };
+            case 'cancelled': return { icon: Trash2, color: 'bg-red-500', label: 'Cancelled', description: 'Order was cancelled', progress: 0 };
             default: return { icon: Clock, color: 'bg-slate-400', label: status, description: 'Processing...', progress: 0 };
         }
     };
@@ -143,9 +147,10 @@ const OrderTracking = () => {
                                 </div>
 
                                 {/* Steps Visual */}
-                                <div className="grid grid-cols-4 gap-4">
-                                    {['pending', 'preparing', 'ready', 'completed'].map((s, i) => {
-                                        const isActive = progress >= (i + 1) * 25;
+                                <div className="grid grid-cols-5 gap-2">
+                                    {['pending', 'preparing', 'ready', 'out_for_delivery', 'completed'].map((s, i) => {
+                                        const progressMarkers = [15, 50, 70, 85, 100];
+                                        const isActive = progress >= progressMarkers[i];
                                         return (
                                             <div key={s} className="flex flex-col items-center gap-3">
                                                 <div className={cn(
@@ -170,7 +175,7 @@ const OrderTracking = () => {
                                 {orders.map(order => (
                                     <button
                                         key={order._id}
-                                        onClick={() => navigate(`/orders?id=${order._id}`)}
+                                        onClick={() => navigate(`/my-orders?id=${order._id}`)}
                                         className={cn(
                                             "w-full bg-white p-6 rounded-[32px] border transition-all duration-300 flex items-center justify-between hover:shadow-xl hover:translate-x-2",
                                             order._id === trackedOrder?._id ? "border-orange-500 shadow-xl shadow-orange-500/5" : "border-slate-50 shadow-sm"

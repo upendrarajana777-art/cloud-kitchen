@@ -43,19 +43,9 @@ app.use('/api/food', require('./routes/food'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/kitchen', require('./routes/kitchen'));
 
-// Socket.io Connection
-io.on('connection', (socket) => {
-    console.log('🔌 New client connected:', socket.id);
-
-    socket.on('join-room', (roomId) => {
-        socket.join(roomId);
-        console.log(`🏠 Client ${socket.id} joined room: ${roomId}`);
-    });
-
-    socket.on('disconnect', () => {
-        console.log('🔌 Client disconnected');
-    });
-});
+// Socket.io Service
+const SocketService = require('./services/SocketService');
+new SocketService(io);
 
 // Health check
 app.get('/api/health', (req, res) => {
