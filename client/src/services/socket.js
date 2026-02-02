@@ -6,9 +6,11 @@ const isLocalhost = Boolean(
     window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
 );
 
-const SOCKET_URL = import.meta.env.VITE_API_URL
-    ? import.meta.env.VITE_API_URL.replace('/api', '')
-    : (isLocalhost ? 'http://localhost:5000' : 'https://cloud-kitchen-gf6y.onrender.com');
+// Force Production URL on any non-localhost environment
+const PROD_SOCKET_URL = 'https://cloud-kitchen-gf6y.onrender.com';
+const SOCKET_URL = isLocalhost
+    ? (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000')
+    : PROD_SOCKET_URL;
 
 const socket = io(SOCKET_URL, {
     autoConnect: false,

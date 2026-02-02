@@ -12,7 +12,8 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
     : [
         'http://localhost:5173',
         'http://localhost:3000',
-        'https://cloud-kitchen-phi-three.vercel.app'
+        'https://cloud-kitchen-phi-three.vercel.app',
+        'https://cloud-kitchen-phi-three-git-master-upendrarajana777-arts-projects.vercel.app' // Vercel preview branch
     ];
 
 const io = new Server(server, {

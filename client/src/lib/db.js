@@ -6,8 +6,11 @@ const isLocalhost = Boolean(
     window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
 );
 
-const API_URL = import.meta.env.VITE_API_URL ||
-    (isLocalhost ? 'http://localhost:5000/api' : 'https://cloud-kitchen-gf6y.onrender.com/api');
+// Force Production URL on any non-localhost environment to prevent environment variable leaks/caching issues
+const PROD_API_URL = 'https://cloud-kitchen-gf6y.onrender.com/api';
+const API_URL = isLocalhost
+    ? (import.meta.env.VITE_API_URL || 'http://localhost:5000/api')
+    : PROD_API_URL;
 
 const api = axios.create({
     baseURL: API_URL,
