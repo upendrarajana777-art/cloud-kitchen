@@ -7,21 +7,28 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',')
-    : [
-        'http://localhost:5173',
-        'http://localhost:3000',
-        'https://cloud-kitchen-phi-three.vercel.app',
-        'https://cloud-kitchen-phi-three-git-master-upendrarajana777-arts-projects.vercel.app' // Vercel preview branch
-    ];
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://cloud-kitchen-phi-three.vercel.app',
+    'https://cloud-kitchen-phi-three-git-master-upendrarajana777-arts-projects.vercel.app'
+];
+
+// Helper to check if origin is allowed
+const isOriginAllowed = (origin) => {
+    if (!origin) return true; // allow non-browser requests
+    if (allowedOrigins.includes(origin)) return true;
+    if (origin.endsWith('.vercel.app')) return true; // Allow all vercel subdomains for this user
+    return false;
+};
 
 const io = new Server(server, {
     cors: {
         origin: (origin, callback) => {
-            if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
+            if (isOriginAllowed(origin) || process.env.NODE_ENV === 'development') {
                 callback(null, true);
             } else {
+                console.warn(`🚨 Socket CORS blocked origin: ${origin}`);
                 callback(new Error('Not allowed by CORS'));
             }
         },
@@ -36,9 +43,10 @@ const io = new Server(server, {
 // Middleware
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
+        if (isOriginAllowed(origin) || process.env.NODE_ENV === 'development') {
             callback(null, true);
         } else {
+            console.warn(`🚨 API CORS blocked origin: ${origin}`);
             callback(new Error('Not allowed by CORS'));
         }
     },
