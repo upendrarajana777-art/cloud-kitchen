@@ -67,10 +67,10 @@ export const getFoodItems = async (category = "All Items") => {
     try {
         const params = category !== "All Items" ? { category } : {};
         const response = await api.get('/food', { params });
-        return response.data;
+        return response.data || [];
     } catch (error) {
         console.error("Error getting food items:", error);
-        throw error;
+        return [];
     }
 };
 
@@ -95,20 +95,20 @@ export const createOrder = async (userId, items, total, address) => {
 export const getOrders = async () => {
     try {
         const response = await api.get('/orders');
-        return response.data;
+        return response.data || [];
     } catch (error) {
         console.error("Error getting orders:", error);
-        throw error;
+        return [];
     }
 };
 
 export const getUserOrders = async (userId) => {
     try {
         const response = await api.get(`/orders/user/${userId}`);
-        return response.data;
+        return response.data || [];
     } catch (error) {
         console.error("Error getting user orders:", error);
-        throw error;
+        return [];
     }
 };
 

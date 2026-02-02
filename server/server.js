@@ -7,11 +7,13 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
-const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://cloud-kitchen-phi-three.vercel.app/', // Update with actual Vercel URL
-];
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',')
+    : [
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'https://cloud-kitchen-phi-three.vercel.app'
+    ];
 
 const io = new Server(server, {
     cors: {
