@@ -19,7 +19,7 @@ class SocketService {
                 console.log(`🏠 Client ${socket.id} joined room: ${roomId}`);
 
                 // If a guest joins, track them as active
-                if (roomId === 'GUEST') {
+                if (roomId === 'GUEST' || roomId.startsWith('guest_')) {
                     this.trackActivity(socket.id);
                     this.updateDailyVisitors(socket.id);
                 } else if (roomId === 'ADMIN') {

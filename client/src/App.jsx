@@ -13,12 +13,14 @@ import AdminLogin from './pages/admin/Login';
 import Settings from './pages/admin/Settings';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
+import { getGuestId } from './lib/guest';
 import socket, { connectSocket, disconnectSocket } from './services/socket';
 
 const App = () => {
   React.useEffect(() => {
-    // Connect as GUEST by default
-    connectSocket('GUEST');
+    // Connect with unique guestId to receive personal order updates
+    const guestId = getGuestId();
+    connectSocket(guestId);
 
     // Heartbeat mechanism for Active Customer tracking
     const heartbeatInterval = setInterval(() => {

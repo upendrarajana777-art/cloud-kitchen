@@ -167,11 +167,19 @@ export const AlertProvider = ({ children }) => {
             window.dispatchEvent(new CustomEvent('new-order-toast', { detail: order }));
         };
 
-        console.log('📡 AlertContext: Registering socket listener');
+        const handleStatusUpdate = (order) => {
+            console.log('📈 Order status updated:', order._id, order.status);
+            window.dispatchEvent(new CustomEvent('order-status-toast', { detail: order }));
+        };
+
+        console.log('📡 AlertContext: Registering socket listeners');
         socket.on('new-order', handleNewOrder);
+        socket.on('order-status-updated', handleStatusUpdate);
+
         return () => {
-            console.log('📡 AlertContext: Removing socket listener');
+            console.log('📡 AlertContext: Removing socket listeners');
             socket.off('new-order', handleNewOrder);
+            socket.off('order-status-updated', handleStatusUpdate);
         };
     }, [playSound, showBrowserNotification]);
 
