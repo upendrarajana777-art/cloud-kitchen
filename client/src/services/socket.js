@@ -32,10 +32,26 @@ const socket = io(SOCKET_URL, {
     reconnectionDelay: 1000,
 });
 
-export const connectSocket = (userId) => {
+let currentRoom = null;
+
+// Handle re-connections automatically
+socket.on('connect', () => {
+    if (currentRoom) {
+        console.log(`📡 Reconnected. Re-joining room: ${currentRoom}`);
+        const token = currentRoom === 'ADMIN' ? localStorage.getItem('adminToken') : null;
+        socket.emit('join-room', { roomId: currentRoom, token });
+    }
+});
+
+export const connectSocket = (roomId) => {
+    currentRoom = roomId;
+    const token = roomId === 'ADMIN' ? localStorage.getItem('adminToken') : null;
+
     if (!socket.connected) {
         socket.connect();
-        socket.emit('join-room', userId);
+    } else {
+        // If already connected, just join the room with payload
+        socket.emit('join-room', { roomId, token });
     }
 };
 

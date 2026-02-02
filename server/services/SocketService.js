@@ -14,7 +14,19 @@ class SocketService {
             console.log('🔌 Real-time tracker connected:', socket.id);
 
             // Handle joining internal rooms (Admin or Guest)
-            socket.on('join-room', (roomId) => {
+            socket.on('join-room', (payload) => {
+                // Support both string (legacy) and object payload
+                const roomId = typeof payload === 'string' ? payload : payload.roomId;
+                const token = typeof payload === 'object' ? payload.token : null;
+
+                // Simple auth check for ADMIN room
+                if (roomId === 'ADMIN') {
+                    if (token !== 'cloud-kitchen-admin-secure-session') {
+                        console.warn(`🚫 Socket ${socket.id} attempted to join ADMIN room without valid token.`);
+                        return;
+                    }
+                }
+
                 socket.join(roomId);
                 console.log(`🏠 Client ${socket.id} joined room: ${roomId}`);
 

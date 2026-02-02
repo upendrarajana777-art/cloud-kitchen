@@ -40,8 +40,8 @@ router.post('/', async (req, res) => {
     try {
         const order = await Order.create(req.body);
 
-        // Notify admin about new order
-        req.io.emit('new-order', order);
+        // Notify admin about new order (ADMIN room only)
+        req.io.to('ADMIN').emit('new-order', order);
 
         res.status(201).json(order);
     } catch (error) {
@@ -64,8 +64,8 @@ router.patch('/:id/status', async (req, res) => {
 
         // Notify customer about status update (room name is just userId)
         req.io.to(order.userId).emit('order-status-updated', order);
-        // Also notify admin dashboard for live updates
-        req.io.emit('admin-order-update', order);
+        // Also notify admin dashboard for live updates (ADMIN room only)
+        req.io.to('ADMIN').emit('admin-order-update', order);
 
         res.json(order);
     } catch (error) {
@@ -81,11 +81,8 @@ router.delete('/:id', async (req, res) => {
             return res.status(404).json({ error: 'Order not found' });
         }
 
-        // Notify admin to remove from view
-        req.io.emit('admin-order-update', { _id: req.params.id, status: 'cancelled' }); // Or a dedicated delete event, but updating to cancelled is safer before removal or just let the FE handle it. 
-        // Actually, if we delete it, the admin FE might break if it tries to update it. 
-        // Let's emit a specific deletion event.
-        req.io.emit('order-deleted', req.params.id);
+        // Notify admin to remove from view (ADMIN room only)
+        req.io.to('ADMIN').emit('order-deleted', req.params.id);
 
         res.json({ message: 'Order deleted successfully' });
     } catch (error) {

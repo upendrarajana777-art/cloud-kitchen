@@ -13,6 +13,12 @@ export const AlertProvider = ({ children }) => {
     const [audioUnlocked, setAudioUnlocked] = useState(false);
     const audioRef = useRef(null);
 
+    // Defensive check to ensure sound only plays for admins
+    const isAdmin = useCallback(() => {
+        return localStorage.getItem('adminToken') === 'cloud-kitchen-admin-secure-session';
+    }, []);
+
+
     // Initialize audio and unlock mechanism
     useEffect(() => {
         audioRef.current = new Audio('/sounds/notification.mp3');
@@ -84,10 +90,11 @@ export const AlertProvider = ({ children }) => {
     const playSound = useCallback(() => {
         if (!audioRef.current) return;
 
-        // Only play if sound is enabled and tab is visible (to prevent echo across tabs)
-        // If no tab is visible, we'll let the first one handle it
-        if (settings.sound) {
-            console.log('🔊 Playing alert sound...');
+        // Only play if: 
+        // 1. Sound is enabled in settings
+        // 2. User is actually an admin (defensive check)
+        if (settings.sound && isAdmin()) {
+            console.log('🔊 Playing admin alert sound...');
             audioRef.current.play().catch(error => {
                 if (error.name === 'NotAllowedError') {
                     window.dispatchEvent(new CustomEvent('audio-blocked-alert'));
@@ -109,7 +116,7 @@ export const AlertProvider = ({ children }) => {
     }, [settings.sound, stopSound]);
 
     const showBrowserNotification = useCallback((order) => {
-        if (!settings.notifications || !("Notification" in window)) return;
+        if (!settings.notifications || !("Notification" in window) || !isAdmin()) return;
 
         if (Notification.permission === "granted") {
             const notification = new Notification("🔔 New Order Received!", {
