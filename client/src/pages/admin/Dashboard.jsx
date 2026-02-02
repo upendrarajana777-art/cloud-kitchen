@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TrendingUp, ShoppingBag, DollarSign, Clock, CheckCircle, XCircle, Users } from 'lucide-react';
 import { subscribeToOrders, getFoodItems, getKitchenStatus, updateKitchenStatus } from '../../lib/db';
 import socket from '../../services/socket';
+import OrderMap from '../../components/admin/OrderMap';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -297,6 +298,23 @@ const Dashboard = () => {
                     >
                         Manage All Orders
                     </button>
+                </div>
+            </div>
+
+            {/* Live Order Map Section */}
+            <div className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 overflow-hidden">
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <h3 className="text-2xl font-black text-gray-900 tracking-tight">Live Delivery Fleet</h3>
+                        <p className="text-gray-400 font-medium text-sm italic">Tracking active orders across the neighborhood</p>
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-xl border border-orange-100">
+                        <MapPin size={16} />
+                        <span className="text-xs font-black uppercase tracking-widest">Real-time Sync</span>
+                    </div>
+                </div>
+                <div className="h-[500px] w-full">
+                    <OrderMap orders={orders} />
                 </div>
             </div>
         </div>

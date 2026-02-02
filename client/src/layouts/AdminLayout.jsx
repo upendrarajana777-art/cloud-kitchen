@@ -4,12 +4,14 @@ import { LayoutDashboard, UtensilsCrossed, ClipboardList, LogOut, ArrowLeft, Set
 import { cn } from '../lib/utils';
 import Button from '../components/ui/Button';
 import NotificationManager from '../components/admin/NotificationManager';
+import ConfirmationModal from '../components/ui/ConfirmationModal';
 
 import { connectSocket } from '../services/socket';
 
 const AdminLayout = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const [confirmModal, setConfirmModal] = React.useState({ isOpen: false });
 
     React.useEffect(() => {
         // Join admin room for live metrics and alerts
@@ -18,8 +20,16 @@ const AdminLayout = () => {
     }, []);
 
     const handleLogout = () => {
-        localStorage.removeItem('adminToken');
-        navigate('/admin/login');
+        setConfirmModal({
+            isOpen: true,
+            title: 'Sign Out?',
+            message: 'Are you sure you want to exit the admin dashboard session?',
+            confirmText: 'Sign Out',
+            onConfirm: () => {
+                localStorage.removeItem('adminToken');
+                navigate('/admin/login');
+            }
+        });
     };
 
     const links = [
@@ -82,6 +92,16 @@ const AdminLayout = () => {
             <main className="flex-1 md:ml-72 p-10">
                 <Outlet />
             </main>
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                confirmText={confirmModal.confirmText}
+                icon={LogOut}
+            />
         </div>
     );
 };

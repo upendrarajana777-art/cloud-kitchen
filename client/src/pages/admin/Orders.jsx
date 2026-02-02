@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { subscribeToOrders, updateOrderStatus, deleteOrder } from '../../lib/db';
 import socket from '../../services/socket';
-import { Clock, CheckCircle2, Flame, Utensils, XCircle, ArrowRight, PackageCheck, MapPin } from 'lucide-react';
+import { Clock, CheckCircle2, Flame, Utensils, XCircle, ArrowRight, PackageCheck, MapPin, Trash2, Ban } from 'lucide-react';
 import Button from '../../components/ui/Button';
-import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
 import { cn } from '../../lib/utils';
 import { useAlerts } from '../../context/AlertContext';
 
@@ -41,7 +41,16 @@ const Orders = () => {
         };
     }, []);
 
-    const [deleteModal, setDeleteModal] = useState({ isOpen: false, orderId: null });
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        orderId: null,
+        type: 'danger',
+        title: '',
+        message: '',
+        confirmText: '',
+        onConfirm: () => { },
+        icon: Trash2
+    });
 
     const handleStatusUpdate = async (orderId, newStatus) => {
         try {
@@ -55,20 +64,37 @@ const Orders = () => {
         }
     };
 
-    const confirmDeleteOrder = (orderId) => {
-        setDeleteModal({ isOpen: true, orderId });
+    const confirmRejectOrder = (orderId) => {
+        setConfirmModal({
+            isOpen: true,
+            orderId,
+            type: 'danger',
+            title: 'Reject Order?',
+            message: 'Are you sure you want to reject this customer order? This will notify the customer immediately.',
+            confirmText: 'Reject Order',
+            icon: Ban,
+            onConfirm: () => handleStatusUpdate(orderId, 'cancelled')
+        });
     };
 
-    const handleDeleteOrder = async () => {
-        if (!deleteModal.orderId) return;
-
-        try {
-            await deleteOrder(deleteModal.orderId);
-            setOrders(prev => prev.filter(o => o._id !== deleteModal.orderId));
-            setDeleteModal({ isOpen: false, orderId: null });
-        } catch (error) {
-            console.error("Failed to delete order", error);
-        }
+    const confirmDeleteOrder = (orderId) => {
+        setConfirmModal({
+            isOpen: true,
+            orderId,
+            type: 'danger',
+            title: 'Delete Order History?',
+            message: 'This will permanently remove the order record. This action cannot be undone.',
+            confirmText: 'Delete Permanently',
+            icon: Trash2,
+            onConfirm: async () => {
+                try {
+                    await deleteOrder(orderId);
+                    setOrders(prev => prev.filter(o => o._id !== orderId));
+                } catch (error) {
+                    console.error("Failed to delete order", error);
+                }
+            }
+        });
     };
 
     const getStatusConfig = (status) => {
@@ -167,7 +193,7 @@ const Orders = () => {
                                             <span>{order.address?.deliveryAddress}</span>
                                             {order.address?.location && (
                                                 <a
-                                                    href={`https://www.google.com/maps?q=${order.address.location.lat},${order.address.location.lng}`}
+                                                    href={`https://www.openstreetmap.org/?mlat=${order.address.location.lat}&mlon=${order.address.location.lng}#map=17/${order.address.location.lat}/${order.address.location.lng}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="flex items-center gap-1 text-blue-500 hover:text-blue-700 underline text-xs font-bold mt-1"
@@ -191,7 +217,7 @@ const Orders = () => {
                                 {order.status === 'pending' && (
                                     <>
                                         <button
-                                            onClick={() => handleStatusUpdate(order._id, 'cancelled')}
+                                            onClick={() => confirmRejectOrder(order._id)}
                                             className="px-6 py-4 rounded-2xl text-sm font-black text-red-500 bg-red-50 hover:bg-red-100 transition-colors"
                                         >
                                             Reject
@@ -272,10 +298,15 @@ const Orders = () => {
                 )}
             </div>
 
-            <DeleteConfirmationModal
-                isOpen={deleteModal.isOpen}
-                onClose={() => setDeleteModal({ isOpen: false, orderId: null })}
-                onConfirm={handleDeleteOrder}
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                confirmText={confirmModal.confirmText}
+                type={confirmModal.type}
+                icon={confirmModal.icon}
             />
         </div>
     );

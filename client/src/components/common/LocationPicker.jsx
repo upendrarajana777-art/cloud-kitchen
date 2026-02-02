@@ -1,73 +1,55 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import React, { useState, useEffect, useCallback } from 'react';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import { MapPin, Navigation } from 'lucide-react';
-import Button from '../ui/Button';
+import L from 'leaflet';
 
-const containerStyle = {
-    width: '100%',
-    height: '100%',
-    borderRadius: '24px'
+// Fix Leaflet marker icons
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+const defaultCenter = [17.3850, 78.4867];
+
+const MapEvents = ({ onMapClick }) => {
+    useMapEvents({
+        click(e) {
+            onMapClick(e.latlng);
+        },
+    });
+    return null;
 };
 
-// Default to Hyderabad or a relevant central location if no prop provided
-const defaultCenter = {
-    lat: 17.3850,
-    lng: 78.4867
-};
-
-const mapOptions = {
-    disableDefaultUI: false,
-    zoomControl: true,
-    streetViewControl: false,
-    mapTypeControl: false,
-    fullscreenControl: false,
-    styles: [
-        {
-            "featureType": "poi",
-            "elementType": "labels",
-            "stylers": [{ "visibility": "off" }]
+const MapController = ({ center }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (center) {
+            map.setView(center, map.getZoom());
         }
-    ]
+    }, [center, map]);
+    return null;
 };
 
 const LocationPicker = ({ onLocationSelect, initialLocation }) => {
-    const [markerPosition, setMarkerPosition] = useState(initialLocation || defaultCenter);
-    const [map, setMap] = useState(null);
-    const mapRef = useRef(null);
+    const [position, setPosition] = useState(
+        initialLocation ? [initialLocation.lat, initialLocation.lng] : defaultCenter
+    );
 
-    const onLoad = useCallback(function callback(map) {
-        mapRef.current = map;
-        setMap(map);
-    }, []);
-
-    const onUnmount = useCallback(function callback(map) {
-        setMap(null);
-        mapRef.current = null;
-    }, []);
-
-    const handleMapClick = (e) => {
-        const newPos = {
-            lat: e.latLng.lat(),
-            lng: e.latLng.lng()
-        };
-        setMarkerPosition(newPos);
-        onLocationSelect(newPos);
-    };
+    const handleMapClick = useCallback((latlng) => {
+        const newPos = [latlng.lat, latlng.lng];
+        setPosition(newPos);
+        onLocationSelect({ lat: latlng.lat, lng: latlng.lng });
+    }, [onLocationSelect]);
 
     const handleCurrentLocation = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const pos = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude,
-                    };
-                    setMarkerPosition(pos);
-                    onLocationSelect(pos);
-                    if (mapRef.current) {
-                        mapRef.current.panTo(pos);
-                        mapRef.current.setZoom(16);
-                    }
+                (pos) => {
+                    const newPos = [pos.coords.latitude, pos.coords.longitude];
+                    setPosition(newPos);
+                    onLocationSelect({ lat: pos.coords.latitude, lng: pos.coords.longitude });
                 },
                 (error) => {
                     console.error("Error getting location: ", error);
@@ -78,6 +60,15 @@ const LocationPicker = ({ onLocationSelect, initialLocation }) => {
             alert("Geolocation is not supported by this browser.");
         }
     };
+
+    const customIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div class="marker-inner bg-orange-500">
+                <div class="marker-pulse bg-orange-500"></div>
+              </div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+    });
 
     return (
         <div className="space-y-4">
@@ -95,28 +86,22 @@ const LocationPicker = ({ onLocationSelect, initialLocation }) => {
                 </button>
             </div>
 
-            <div className="relative h-[350px] w-full rounded-[24px] overflow-hidden shadow-lg border-4 border-white">
-                <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAP_KEY}>
-                    <GoogleMap
-                        mapContainerStyle={containerStyle}
-                        center={markerPosition}
-                        zoom={14}
-                        onLoad={onLoad}
-                        onUnmount={onUnmount}
-                        onClick={handleMapClick}
-                        options={mapOptions}
-                    >
-                        <Marker
-                            position={markerPosition}
-                            draggable={true}
-                            onDragEnd={handleMapClick}
-                            animation={typeof window !== 'undefined' && window.google?.maps?.Animation ? window.google.maps.Animation.DROP : undefined}
-                        />
-                    </GoogleMap>
-                </LoadScript>
+            <div className="relative h-[350px] w-full rounded-[24px] overflow-hidden shadow-lg border-4 border-white z-0">
+                <MapContainer
+                    center={position}
+                    zoom={15}
+                    className="h-full w-full"
+                >
+                    <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    />
+                    <MapController center={position} />
+                    <MapEvents onMapClick={handleMapClick} />
+                    <Marker position={position} icon={customIcon} />
+                </MapContainer>
 
-                {/* Overlay Hint */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg pointer-events-none">
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg pointer-events-none z-[1000]">
                     <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
                         Tap map to adjust pin
                     </p>
@@ -124,9 +109,9 @@ const LocationPicker = ({ onLocationSelect, initialLocation }) => {
             </div>
 
             <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 border border-slate-100">
-                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse bg-emerald-400" />
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 <p className="text-xs font-bold text-slate-500">
-                    Selected: {markerPosition.lat.toFixed(6)}, {markerPosition.lng.toFixed(6)}
+                    Selected: {position[0].toFixed(6)}, {position[1].toFixed(6)}
                 </p>
             </div>
         </div>

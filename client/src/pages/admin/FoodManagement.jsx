@@ -5,12 +5,15 @@ import Input from '../../components/ui/Input';
 import Modal from '../../components/ui/Modal';
 import { getFoodItems, addFoodItem, updateFoodItem, deleteFoodItem } from '../../lib/db';
 import socket from '../../services/socket';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
+import { AlertTriangle } from 'lucide-react';
 
 const FoodManagement = () => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, id: null });
 
     // Form State
     const [formData, setFormData] = useState({
@@ -124,11 +127,21 @@ const FoodManagement = () => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm("Delete this dish forever? 🍔")) {
-            await deleteFoodItem(id);
-            fetchItems();
-        }
+    const handleDelete = (id) => {
+        setConfirmModal({
+            isOpen: true,
+            id,
+            title: 'Delete this dish?',
+            message: 'This culinary masterpiece will be removed from your menu forever. Are you sure?',
+            onConfirm: async () => {
+                try {
+                    await deleteFoodItem(id);
+                    fetchItems();
+                } catch (error) {
+                    console.error("Error deleting food:", error);
+                }
+            }
+        });
     };
 
     return (
@@ -278,6 +291,15 @@ const FoodManagement = () => {
                     </Button>
                 </form>
             </Modal>
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                confirmText="Delete Dish"
+                icon={Trash2}
+            />
         </div>
     );
 };
