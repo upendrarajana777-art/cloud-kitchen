@@ -1,10 +1,14 @@
 import { io } from 'socket.io-client';
 
+const isLocalhost = Boolean(
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '[::1]' ||
+    window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
+);
+
 const SOCKET_URL = import.meta.env.VITE_API_URL
     ? import.meta.env.VITE_API_URL.replace('/api', '')
-    : (import.meta.env.PROD
-        ? 'https://cloud-kitchen-gf6y.onrender.com'
-        : 'http://localhost:5000');
+    : (isLocalhost ? 'http://localhost:5000' : 'https://cloud-kitchen-gf6y.onrender.com');
 
 const socket = io(SOCKET_URL, {
     autoConnect: false,

@@ -110,7 +110,7 @@ const LocationPicker = ({ onLocationSelect, initialLocation }) => {
                             position={markerPosition}
                             draggable={true}
                             onDragEnd={handleMapClick}
-                            animation={typeof window !== 'undefined' && window.google ? window.google.maps.Animation.DROP : undefined}
+                            animation={typeof window !== 'undefined' && window.google?.maps?.Animation ? window.google.maps.Animation.DROP : undefined}
                         />
                     </GoogleMap>
                 </LoadScript>
