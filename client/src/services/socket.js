@@ -1,19 +1,28 @@
 import { io } from 'socket.io-client';
 
-// Hardcoded Production Backend URL
+// --- CONFIGURATION ---
 const PROD_URL = 'https://cloud-kitchen-gf6y.onrender.com';
 
-const isLocalhost = Boolean(
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname === '[::1]'
-);
+const getSocketUrl = () => {
+    // 1. If we are on HTTPS, we are almost certainly in production
+    if (window.location.protocol === 'https:') return PROD_URL;
 
-const SOCKET_URL = isLocalhost
-    ? (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000')
-    : PROD_URL;
+    // 2. Check hostname for local development
+    const host = window.location.hostname;
+    const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
 
-console.log(`🔌 Socket connecting to: ${SOCKET_URL}`);
+    if (isLocal) {
+        return import.meta.env.VITE_API_URL
+            ? import.meta.env.VITE_API_URL.replace('/api', '')
+            : 'http://localhost:5000';
+    }
+
+    // 3. Fallback to production for everything else
+    return PROD_URL;
+};
+
+const SOCKET_URL = getSocketUrl();
+console.log(`🔌 System: Connecting Socket to ${SOCKET_URL}`);
 
 const socket = io(SOCKET_URL, {
     autoConnect: false,

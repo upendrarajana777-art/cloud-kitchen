@@ -26,9 +26,10 @@ const io = new Server(server, {
     cors: {
         origin: (origin, callback) => {
             if (isOriginAllowed(origin) || process.env.NODE_ENV === 'development') {
+                console.log(`🟢 Socket Connection Allowed from: ${origin || 'Internal'}`);
                 callback(null, true);
             } else {
-                console.warn(`🚨 Socket CORS blocked origin: ${origin}`);
+                console.error(`🚨 Socket CORS BLOCKED: ${origin}`);
                 callback(new Error('Not allowed by CORS'));
             }
         },
@@ -44,9 +45,10 @@ const io = new Server(server, {
 app.use(cors({
     origin: (origin, callback) => {
         if (isOriginAllowed(origin) || process.env.NODE_ENV === 'development') {
+            // Only log if it's not a noisy background request or log once
             callback(null, true);
         } else {
-            console.warn(`🚨 API CORS blocked origin: ${origin}`);
+            console.error(`🚨 API CORS BLOCKED: ${origin}`);
             callback(new Error('Not allowed by CORS'));
         }
     },

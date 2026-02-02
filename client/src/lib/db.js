@@ -1,20 +1,26 @@
 import axios from 'axios';
 
-// Hardcoded Production Backend URL
+// --- CONFIGURATION ---
 const PROD_URL = 'https://cloud-kitchen-gf6y.onrender.com';
 
-const isLocalhost = Boolean(
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname === '[::1]'
-);
+const getBaseUrl = () => {
+    // 1. If we are on HTTPS, we are almost certainly in production
+    if (window.location.protocol === 'https:') return `${PROD_URL}/api`;
 
-// If we are on Vercel, ALWAYS use the production URL. No fallbacks.
-const API_URL = isLocalhost
-    ? (import.meta.env.VITE_API_URL || 'http://localhost:5000/api')
-    : `${PROD_URL}/api`;
+    // 2. Check hostname for local development
+    const host = window.location.hostname;
+    const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
 
-console.log(`🌐 API initialized at: ${API_URL}`);
+    if (isLocal) {
+        return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    }
+
+    // 3. Fallback to production for everything else (Vercel, etc.)
+    return `${PROD_URL}/api`;
+};
+
+const API_URL = getBaseUrl();
+console.log(`🚀 System: Connecting to API at ${API_URL}`);
 
 const api = axios.create({
     baseURL: API_URL,
